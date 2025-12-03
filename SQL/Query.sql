@@ -9,15 +9,27 @@ JOIN practica5.CuentaPokemon c
 
 
 -- ii. Calcular cuántos Pokémons registró cada participante para el torneo de peleas por cada una de las ediciones.
-SELECT 
-    pa.idPersona,
-    pa.nombre || ' ' || pa.apellidoPaterno AS nombre,
-    pa.idEvento,
+SELECT
+    e.numEdicion,
+    p.idPersona,
+    p.nombre || ' ' || p.apellidoPaterno AS nombre_completo,
     COUNT(po.idPokemon) AS total_pokemons
-FROM practica5.Participante pa
-LEFT JOIN practica5.Pokemon po 
-    ON pa.idPersona = po.idPersona
-GROUP BY pa.idPersona, pa.nombre, pa.apellidoPaterno, pa.idEvento;
+FROM practica5.Participante p
+JOIN practica5.Evento e
+    ON p.idEvento = e.idEvento -- 1. Se une con Evento para obtener el número de edición.
+JOIN practica5.Participar pa
+    ON p.idPersona = pa.idPersona -- 2. Se asegura que el Participante esté inscrito en al menos un Torneo.
+JOIN practica5.TorneoPeleas tp
+    ON pa.idTorneo = tp.idTorneo -- 3. Se verifica que el torneo sea específicamente de Peleas.
+JOIN practica5.Pokemon po
+    ON p.idPersona = po.idPersona -- 4. Se unen los Pokémons registrados por el Participante.
+GROUP BY
+    e.numEdicion,
+    p.idPersona,
+    p.nombre,
+    p.apellidoPaterno
+ORDER BY
+    e.numEdicion, p.idPersona;
 
 
 -- iii. Listar todos los Pokémones cuya especie contenga la cadena ćhu ́
@@ -56,10 +68,15 @@ GROUP BY par.idPersona, par.nombre;
 
 --vi. Listar los Pokémones shinys, que fueron capturados durante el evento, únicamente si fueron capturados entre
 --las 14:00hrs y las 18:00hrs.
-SELECT *
-FROM practica5.Pokemon
-WHERE shiny = TRUE
-  AND horaCaptura BETWEEN '14:00' AND '18:00';
+SELECT
+    po.idPokemon,
+    po.nombre,
+    po.especie,
+    po.horaCaptura,
+    po.shiny
+FROM practica5.Pokemon po
+WHERE po.shiny = TRUE
+  AND po.horaCaptura BETWEEN '14:00' AND '18:00';
 
 
 --vii. Mostrar a todos los vendedores junto con los alimentos que venden, indicando el precio sin IVA y el precio final
@@ -161,3 +178,60 @@ WHERE
             GROUP BY pr2.idPersona
         ) sub
     );
+
+
+-- funciones 
+SELECT nombre, calcular_edad_participante(idPersona) AS edad
+FROM practica5.Participante;
+
+SELECT contar_shinys(1);
+SELECT promedio_cp(1);
+
+--procedimientos 
+-- Consultar edad de un participante con idPersona = 5
+SELECT practica5.calcular_edad_participante(5);
+
+-- Consultar cuántos shinys tiene el participante con idPersona = 5
+SELECT practica5.contar_shinys(5);
+
+-- Consultar el promedio de CP de los Pokémon del participante con idPersona = 5
+SELECT practica5.promedio_cp(5);
+
+--triggers
+INSERT INTO practica5.Visitante(
+    idPersona, idEvento, horaEntrada, horaSalida, fechaNacimiento,
+    apellidoMaterno, apellidoPaterno, nombre, sexo, conteo
+)
+VALUES (
+    200, 1, '14:00', '15:00', '2000-01-01',
+    'López', 'García', 'Juan', 'Masculino', 0
+);
+
+
+-- 2. Probar trigger de auditoría en Participante
+-- Este INSERT debe generar un registro en practica5.AuditoriaParticipante
+INSERT INTO practica5.Participante(
+    idPersona, numeroCuenta, idEvento, correo, facultad, carrera,
+    fechaNacimiento, apellidoMaterno, apellidoPaterno, nombre, sexo, conteo
+)
+VALUES (
+    300, '123456789', 1, 'test@unam.mx', 'Ciencias', 'Computación',
+    '2001-05-05', 'Hernández', 'Martínez', 'Ana', 'Femenino', 0
+);
+
+-- Consultar la tabla de auditoría para verificar que se insertó el log
+SELECT * FROM practica5.AuditoriaParticipante;
+
+-- 3. Probar trigger de actualización de conteo de shinys
+-- Este INSERT debe actualizar el campo conteo en Participante (idPersona = 300)
+INSERT INTO practica5.Pokemon(
+    idPokemon, idPersona, cp, nombre, horaCaptura, sexo, especie, peso, shiny
+)
+VALUES (
+    400, 300, 1200, 'Pikachu', '16:00', 'Macho', 'Pikachu', 6.0, TRUE
+);
+
+-- Consultar el conteo actualizado en Participante
+SELECT conteo
+FROM practica5.Participante
+WHERE idPersona = 300;
