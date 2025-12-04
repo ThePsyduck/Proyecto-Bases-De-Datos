@@ -1,7 +1,3 @@
-
-
-
-
 -- funciones 
 SELECT nombre, calcular_edad_participante(idPersona) AS edad
 FROM practica5.Participante;
