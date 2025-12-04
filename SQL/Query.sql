@@ -1,70 +1,6 @@
 
--- i. Mostrar el nombre completo de todos los participantes junto con su cuenta de Pokémon Go.
-SELECT 
-    p.nombre || ' ' || p.apellidoPaterno || ' ' || p.apellidoMaterno AS nombre_completo,
-    c.nombreUsuario AS cuenta_pokemon_go
-FROM practica5.Participante p
-JOIN practica5.CuentaPokemon c 
-    ON p.idPersona = c.idPersona;
 
 
--- ii. Calcular cuántos Pokémons registró cada participante para el torneo de peleas por cada una de las ediciones.
-SELECT
-    e.numEdicion,
-    p.idPersona,
-    p.nombre || ' ' || p.apellidoPaterno AS nombre_completo,
-    COUNT(po.idPokemon) AS total_pokemons
-FROM practica5.Participante p
-JOIN practica5.Evento e
-    ON p.idEvento = e.idEvento -- 1. Se une con Evento para obtener el número de edición.
-JOIN practica5.Participar pa
-    ON p.idPersona = pa.idPersona -- 2. Se asegura que el Participante esté inscrito en al menos un Torneo.
-JOIN practica5.TorneoPeleas tp
-    ON pa.idTorneo = tp.idTorneo -- 3. Se verifica que el torneo sea específicamente de Peleas.
-JOIN practica5.Pokemon po
-    ON p.idPersona = po.idPersona -- 4. Se unen los Pokémons registrados por el Participante.
-GROUP BY
-    e.numEdicion,
-    p.idPersona,
-    p.nombre,
-    p.apellidoPaterno
-ORDER BY
-    e.numEdicion, p.idPersona;
-
-
--- iii. Listar todos los Pokémones cuya especie contenga la cadena ćhu ́
-SELECT *
-FROM practica5.Pokemon
-WHERE especie ILIKE '%chu%';
-
-
-
---v. Calcular la distancia total recorrida por cada participante en el torneo de distancia recorrida.
-SELECT 
-    par.idPersona,
-    par.nombre,
-    SUM(pl.puntosLocacion) AS distancia_total
-FROM practica5.Participante par
-JOIN practica5.Participar pa 
-    ON pa.idPersona = par.idPersona
-JOIN practica5.PuntosLocacion pl
-    ON pl.idTorneo = pa.idTorneo
-GROUP BY par.idPersona, par.nombre;
-
-
-
---vii. Mostrar a todos los vendedores junto con los alimentos que venden, indicando el precio sin IVA y el precio final
---con IVA del 16 %.
-SELECT 
-    v.nombre AS vendedor,
-    a.nombre AS alimento,
-    a.precioVenta AS precio_sin_iva,
-    a.precioVenta * 1.16 AS precio_con_iva
-FROM practica5.Vendedor v
-JOIN practica5.Alimento a
-    ON v.idPersona = a.idPersona
-       AND v.idOrganizador = a.idOrganizador
-       AND v.idEvento = a.idEvento;
 
 -- funciones 
 SELECT nombre, calcular_edad_participante(idPersona) AS edad
@@ -346,3 +282,66 @@ WHERE ps.idTorneo IN (SELECT idTorneo FROM practica5.TorneoShinys)
         WHERE idTorneo IN (SELECT idTorneo FROM practica5.TorneoDistancia)
   );
 
+-- 16:  ii. Calcular cuántos Pokémons registró cada participante para el torneo de peleas por cada una de las ediciones.
+SELECT
+    e.numEdicion,
+    p.idPersona,
+    p.nombre || ' ' || p.apellidoPaterno AS nombre_completo,
+    COUNT(po.idPokemon) AS total_pokemons
+FROM practica5.Participante p
+JOIN practica5.Evento e
+    ON p.idEvento = e.idEvento -- 1. Se une con Evento para obtener el número de edición.
+JOIN practica5.Participar pa
+    ON p.idPersona = pa.idPersona -- 2. Se asegura que el Participante esté inscrito en al menos un Torneo.
+JOIN practica5.TorneoPeleas tp
+    ON pa.idTorneo = tp.idTorneo -- 3. Se verifica que el torneo sea específicamente de Peleas.
+JOIN practica5.Pokemon po
+    ON p.idPersona = po.idPersona -- 4. Se unen los Pokémons registrados por el Participante.
+GROUP BY
+    e.numEdicion,
+    p.idPersona,
+    p.nombre,
+    p.apellidoPaterno
+ORDER BY
+    e.numEdicion, p.idPersona;
+
+-- 17: --v. Calcular la distancia total recorrida por cada participante en el torneo de distancia recorrida.
+SELECT 
+    par.idPersona,
+    par.nombre,
+    SUM(pl.puntosLocacion) AS distancia_total
+FROM practica5.Participante par
+JOIN practica5.Participar pa 
+    ON pa.idPersona = par.idPersona
+JOIN practica5.PuntosLocacion pl
+    ON pl.idTorneo = pa.idTorneo
+GROUP BY par.idPersona, par.nombre;
+
+
+
+-- 18: vii. Mostrar a todos los vendedores junto con los alimentos que venden, indicando el precio sin IVA y el precio final
+--con IVA del 16 %.
+SELECT 
+    v.nombre AS vendedor,
+    a.nombre AS alimento,
+    a.precioVenta AS precio_sin_iva,
+    a.precioVenta * 1.16 AS precio_con_iva
+FROM practica5.Vendedor v
+JOIN practica5.Alimento a
+    ON v.idPersona = a.idPersona
+       AND v.idOrganizador = a.idOrganizador
+       AND v.idEvento = a.idEvento;
+
+-- 19 -- i. Mostrar el nombre completo de todos los participantes junto con su cuenta de Pokémon Go.
+SELECT 
+    p.nombre || ' ' || p.apellidoPaterno || ' ' || p.apellidoMaterno AS nombre_completo,
+    c.nombreUsuario AS cuenta_pokemon_go
+FROM practica5.Participante p
+JOIN practica5.CuentaPokemon c 
+    ON p.idPersona = c.idPersona;
+
+
+-- 20: iii. Listar todos los Pokémones cuya especie contenga la cadena ćhu ́
+SELECT *
+FROM practica5.Pokemon
+WHERE especie ILIKE '%chu%';
